@@ -11,6 +11,7 @@ pub use memory_map::{MemoryMapTag, MemoryArea, MemoryAreaIter};
 pub use module::{ModuleTag, ModuleIter};
 pub use command_line::CommandLineTag;
 pub use rsdp::{RsdpV1Tag, RsdpV2Tag};
+pub use framebuffer::{FramebufferInfoTag};
 
 #[macro_use]
 extern crate bitflags;
@@ -22,6 +23,7 @@ mod memory_map;
 mod module;
 mod command_line;
 mod rsdp;
+mod framebuffer;
 
 pub unsafe fn load(address: usize) -> BootInformation {
     if !cfg!(test) {
@@ -82,6 +84,10 @@ impl BootInformation {
 
     pub fn rsdp_v2_tag(&self) -> Option<&'static RsdpV2Tag> {
         self.get_tag(15).map(|tag| unsafe { &*(tag as *const Tag as *const RsdpV2Tag) })
+    }
+
+    pub fn framebuffer_info_tag(&self) -> Option<&'static FramebufferInfoTag> {
+        self.get_tag(8).map(|tag| unsafe { &*(tag as *const Tag as *const FramebufferInfoTag) });
     }
 
     fn get(&self) -> &BootInformationInner {
