@@ -1,6 +1,7 @@
 //! Framebuffer info
 
 #[repr(C)]
+#[derive(Debug)]
 pub struct ColorInfoPaletteEntry {
     red_value: u8,
     green_value: u8,
@@ -8,6 +9,7 @@ pub struct ColorInfoPaletteEntry {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 struct ColorInfoPalette {
     framebuffer_palette_num_colors: u32,
     framebuffer_palette: [ColorInfoPaletteEntry; 1]
@@ -25,6 +27,7 @@ struct ColorInfoRgb {
     framebuffer_blue_mask_size: u8,
 }
 
+#[derive(Debug)]
 pub enum FramebufferType {
     IndexedColor(&'static [ColorInfoPaletteEntry]),
     DirectRgb {
@@ -50,10 +53,10 @@ pub struct FramebufferInfoTag {
     framebuffer_bpp: u8,
     framebuffer_type: u8,
     reserved: u8,
-    color_info: [u8]
+    color_info: [u8; 0]
 }
 
-impl FramebufferInfo {
+impl FramebufferInfoTag {
     /// Framebuffer physical address. This field is 64-bit wide but bootloader should set
     /// it under 4GiB if possible for compatibility with payloads which aren't aware of PAE or
     /// amd64.
@@ -87,13 +90,16 @@ impl FramebufferInfo {
             FramebufferType::IndexedColor(slice)
         } else if self.framebuffer_type == 1 {
             let color_info = &self.color_info as *const [u8] as *const u8 as *const ColorInfoRgb;
-            FramebufferType::DirectRgb {
-                framebuffer_red_field_position: (*color_info).framebuffer_red_field_position,
-                framebuffer_red_mask_size: (*color_info).framebuffer_red_mask_size,
-                framebuffer_green_field_position: (*color_info).framebuffer_green_field_position,
-                framebuffer_green_mask_size: (*color_info).framebuffer_green_mask_size,
-                framebuffer_blue_field_position: (*color_info).framebuffer_blue_field_position,
-                framebuffer_blue_mask_size: (*color_info).framebuffer_blue_mask_size,
+            unsafe {
+                // Safe if the color_info is correct
+                FramebufferType::DirectRgb {
+                    framebuffer_red_field_position: (*color_info).framebuffer_red_field_position,
+                    framebuffer_red_mask_size: (*color_info).framebuffer_red_mask_size,
+                    framebuffer_green_field_position: (*color_info).framebuffer_green_field_position,
+                    framebuffer_green_mask_size: (*color_info).framebuffer_green_mask_size,
+                    framebuffer_blue_field_position: (*color_info).framebuffer_blue_field_position,
+                    framebuffer_blue_mask_size: (*color_info).framebuffer_blue_mask_size,
+                }
             }
         } else if self.framebuffer_type == 2 {
             FramebufferType::EGAText

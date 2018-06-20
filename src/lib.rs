@@ -39,6 +39,9 @@ pub struct BootInformation {
     inner: *const BootInformationInner,
 }
 
+unsafe impl Send for BootInformation {}
+unsafe impl Sync for BootInformation {}
+
 #[repr(C, packed)]
 struct BootInformationInner {
     total_size: u32,
@@ -87,7 +90,7 @@ impl BootInformation {
     }
 
     pub fn framebuffer_info_tag(&self) -> Option<&'static FramebufferInfoTag> {
-        self.get_tag(8).map(|tag| unsafe { &*(tag as *const Tag as *const FramebufferInfoTag) });
+        self.get_tag(8).map(|tag| unsafe { &*(tag as *const Tag as *const FramebufferInfoTag) })
     }
 
     fn get(&self) -> &BootInformationInner {
